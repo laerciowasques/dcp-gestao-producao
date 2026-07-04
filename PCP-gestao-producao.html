@@ -1,0 +1,1984 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DCP — Gestão Diária de Produção</title>
+  <style>
+    /* ═══════════════════════════════════════════════════════════════
+       CSS — Design industrial executivo, responsivo, single-file
+       ═══════════════════════════════════════════════════════════════ */
+    :root {
+      --bg-dark: #0f1419;
+      --bg-card: #1a2332;
+      --bg-card-hover: #1f2a3d;
+      --bg-input: #0d1117;
+      --border: #2d3a4f;
+      --text: #e8edf4;
+      --text-muted: #8b9cb3;
+      --accent: #00b4d8;
+      --accent-dim: #0096c7;
+      --green: #10b981;
+      --green-bg: rgba(16, 185, 129, 0.15);
+      --yellow: #f59e0b;
+      --yellow-bg: rgba(245, 158, 11, 0.15);
+      --red: #ef4444;
+      --red-bg: rgba(239, 68, 68, 0.15);
+      --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+      --radius: 10px;
+      --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg-dark);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #1a2332 0%, #0f1419 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 1.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .logo-icon {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-dim));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.85rem;
+      color: #fff;
+    }
+
+    .logo h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .logo span {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .date-picker-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .date-picker-wrap label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    input[type="date"] {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.45rem 0.75rem;
+      border-radius: 6px;
+      font-family: inherit;
+    }
+
+    /* Navigation */
+    .nav-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+
+    .nav-tab {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+
+    .nav-tab:hover {
+      background: var(--bg-card);
+      color: var(--text);
+    }
+
+    .nav-tab.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover { background: var(--accent-dim); }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover { background: var(--bg-card-hover); }
+
+    .btn-danger {
+      background: var(--red);
+      color: #fff;
+    }
+
+    .btn-danger:hover { opacity: 0.9; }
+
+    .btn-sm { padding: 0.35rem 0.65rem; font-size: 0.78rem; }
+
+    .btn-icon {
+      padding: 0.4rem;
+      min-width: 32px;
+      justify-content: center;
+    }
+
+    /* Main content */
+    .main {
+      padding: 1.5rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .panel {
+      display: none;
+    }
+
+    .panel.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .panel-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .panel-title::before {
+      content: '';
+      width: 4px;
+      height: 20px;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      box-shadow: var(--shadow);
+    }
+
+    .card-grid {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .card-grid-2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+    .card-grid-3 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    .card-grid-4 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+
+    /* KPI Cards */
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .kpi-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--accent);
+    }
+
+    .kpi-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.35rem;
+    }
+
+    .kpi-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .kpi-sub {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    /* Forms */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .form-group.full { grid-column: 1 / -1; }
+
+    .form-group label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.55rem 0.75rem;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.9rem;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(0, 180, 216, 0.2);
+    }
+
+    .form-group textarea { resize: vertical; min-height: 70px; }
+
+    .form-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    /* Tables */
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    th, td {
+      padding: 0.65rem 0.85rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: var(--bg-input);
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+    td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.55rem;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .badge-green { background: var(--green-bg); color: var(--green); }
+    .badge-yellow { background: var(--yellow-bg); color: var(--yellow); }
+    .badge-red { background: var(--red-bg); color: var(--red); }
+    .badge-neutral { background: rgba(139, 156, 179, 0.15); color: var(--text-muted); }
+
+    .eff-green { color: var(--green); font-weight: 600; }
+    .eff-yellow { color: var(--yellow); font-weight: 600; }
+    .eff-red { color: var(--red); font-weight: 600; }
+    .eff-neutral { color: var(--text-muted); }
+
+    /* Period cards */
+    .period-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .period-header {
+      background: var(--bg-input);
+      padding: 0.85rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .period-header h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .period-header .time {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .period-body { padding: 1rem; }
+
+    .period-stats {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .period-stat {
+      font-size: 0.82rem;
+    }
+
+    .period-stat strong {
+      display: block;
+      font-size: 1.1rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Process tabs */
+    .process-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-bottom: 1rem;
+    }
+
+    .process-tab {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 0.45rem 0.9rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.82rem;
+      transition: all 0.2s;
+    }
+
+    .process-tab:hover { color: var(--text); border-color: var(--accent); }
+
+    .process-tab.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    /* Alerts */
+    .alert-list { display: flex; flex-direction: column; gap: 0.5rem; }
+
+    .alert-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      border-left: 3px solid;
+    }
+
+    .alert-item.critical {
+      background: var(--red-bg);
+      border-color: var(--red);
+    }
+
+    .alert-item.warning {
+      background: var(--yellow-bg);
+      border-color: var(--yellow);
+    }
+
+    .alert-item.info {
+      background: rgba(0, 180, 216, 0.1);
+      border-color: var(--accent);
+    }
+
+    .alert-item.success {
+      background: var(--green-bg);
+      border-color: var(--green);
+    }
+
+    .alert-icon { font-size: 1.1rem; flex-shrink: 0; }
+
+    /* Synthesis */
+    .synthesis-block {
+      margin-bottom: 1.25rem;
+    }
+
+    .synthesis-block h4 {
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+      color: var(--accent);
+    }
+
+    .synthesis-block ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .synthesis-block li {
+      padding: 0.4rem 0;
+      padding-left: 1.25rem;
+      position: relative;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+
+    .synthesis-block li::before {
+      content: '▸';
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+    }
+
+    /* Chart bars */
+    .bar-chart { display: flex; flex-direction: column; gap: 0.6rem; }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 120px 1fr 60px;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.82rem;
+    }
+
+    .bar-label {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .bar-track {
+      height: 22px;
+      background: var(--bg-input);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.5s ease;
+      min-width: 2px;
+    }
+
+    .bar-fill.green { background: linear-gradient(90deg, var(--green), #34d399); }
+    .bar-fill.yellow { background: linear-gradient(90deg, var(--yellow), #fbbf24); }
+    .bar-fill.red { background: linear-gradient(90deg, var(--red), #f87171); }
+
+    .bar-value {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      max-width: 520px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal h3 {
+      margin-bottom: 1rem;
+      font-size: 1rem;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: flex-end;
+      margin-top: 1rem;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      color: var(--text-muted);
+    }
+
+    .empty-state .icon { font-size: 2.5rem; margin-bottom: 0.75rem; opacity: 0.5; }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      z-index: 300;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s;
+      font-size: 0.85rem;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success { border-left: 3px solid var(--green); }
+    .toast.error { border-left: 3px solid var(--red); }
+
+    /* Special tags */
+    .tag-select {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+
+    .tag-option {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.55rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      cursor: pointer;
+      background: var(--bg-input);
+      color: var(--text-muted);
+      transition: all 0.2s;
+    }
+
+    .tag-option.selected {
+      border-color: var(--accent);
+      background: rgba(0, 180, 216, 0.15);
+      color: var(--accent);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header-top { flex-direction: column; align-items: flex-start; }
+      .main { padding: 1rem; }
+      .bar-row { grid-template-columns: 90px 1fr 50px; }
+      .kpi-value { font-size: 1.4rem; }
+    }
+
+    /* Hidden file input */
+    .hidden-input { display: none; }
+
+    .section-gap { margin-bottom: 1.5rem; }
+
+    .ranking-list { list-style: none; }
+
+    .ranking-list li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.85rem;
+    }
+
+    .ranking-list li:last-child { border-bottom: none; }
+
+    .rank-pos {
+      width: 24px;
+      height: 24px;
+      background: var(--bg-input);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      margin-right: 0.5rem;
+    }
+
+    .rank-pos.gold { background: #f59e0b; color: #000; }
+    .rank-pos.silver { background: #94a3b8; color: #000; }
+    .rank-pos.bronze { background: #b45309; color: #fff; }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       HTML — Estrutura da aplicação DCP
+       ═══════════════════════════════════════════════════════════════ -->
+
+  <header class="header">
+    <div class="header-top">
+      <div class="logo">
+        <div class="logo-icon">DCP</div>
+        <div>
+          <h1>Gestão Diária de Produção</h1>
+          <span>Controle de Produtividade Efetiva — PCP</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="date-picker-wrap">
+          <label for="globalDate">Data:</label>
+          <input type="date" id="globalDate">
+        </div>
+        <button class="btn btn-secondary btn-sm" id="btnExportJSON" title="Exportar JSON">📥 JSON</button>
+        <button class="btn btn-secondary btn-sm" id="btnImportJSON" title="Importar JSON">📤 Importar</button>
+        <input type="file" id="fileImportJSON" class="hidden-input" accept=".json,application/json">
+        <button class="btn btn-secondary btn-sm" id="btnExportCSV" title="Exportar CSV">📊 CSV</button>
+        <button class="btn btn-danger btn-sm" id="btnClearDay" title="Limpar dia">🗑 Limpar Dia</button>
+      </div>
+    </div>
+    <nav class="nav-tabs" id="navTabs">
+      <button class="nav-tab active" data-panel="lancamento">Lançamento</button>
+      <button class="nav-tab" data-panel="dashboard">Dashboard</button>
+      <button class="nav-tab" data-panel="periodo">Por Período</button>
+      <button class="nav-tab" data-panel="processo">Por Processo</button>
+      <button class="nav-tab" data-panel="resumo">Resumo Diário</button>
+      <button class="nav-tab" data-panel="observacoes">Observações</button>
+      <button class="nav-tab" data-panel="sintese">Síntese & Alertas</button>
+    </nav>
+  </header>
+
+  <main class="main">
+
+    <!-- PAINEL: Lançamento -->
+    <section class="panel active" id="panel-lancamento">
+      <h2 class="panel-title">Lançamento Diário</h2>
+
+      <div class="card section-gap">
+        <form id="formLancamento">
+          <input type="hidden" id="editId" value="">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="inputPeriodo">Período</label>
+              <select id="inputPeriodo" required>
+                <option value="1">Período 1 — 07:00 às 09:00</option>
+                <option value="2">Período 2 — 09:00 às 12:00</option>
+                <option value="3">Período 3 — 13:00 às 15:00</option>
+                <option value="4">Período 4 — 15:00 às 17:00</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="inputProcesso">Processo</label>
+              <select id="inputProcesso" required>
+                <option value="Enchimento">Enchimento</option>
+                <option value="Embalagem">Embalagem</option>
+                <option value="Prensa">Prensa</option>
+                <option value="Montagem">Montagem</option>
+                <option value="Costura">Costura</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="inputFuncionario">Funcionário</label>
+              <input type="text" id="inputFuncionario" placeholder="Nome do funcionário" required>
+            </div>
+            <div class="form-group">
+              <label for="inputMeta">Meta</label>
+              <input type="number" id="inputMeta" min="0" step="1" placeholder="0">
+            </div>
+            <div class="form-group">
+              <label for="inputProducao">Produção</label>
+              <input type="number" id="inputProducao" min="0" step="1" placeholder="0">
+            </div>
+            <div class="form-group full">
+              <label>Situação especial (opcional)</label>
+              <div class="tag-select" id="tagSelect">
+                <span class="tag-option" data-tag="normal">Normal</span>
+                <span class="tag-option" data-tag="producao_parcial">Produção Parcial</span>
+                <span class="tag-option" data-tag="maquina_parada">Máquina Parada</span>
+                <span class="tag-option" data-tag="ausencia">Ausência</span>
+                <span class="tag-option" data-tag="fechamento">Fechamento</span>
+                <span class="tag-option" data-tag="problema_operacional">Problema Operacional</span>
+              </div>
+            </div>
+            <div class="form-group full">
+              <label for="inputObservacao">Observação</label>
+              <textarea id="inputObservacao" placeholder="Observações do lançamento..."></textarea>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" id="btnSubmit">➕ Adicionar Lançamento</button>
+            <button type="button" class="btn btn-secondary" id="btnCancelEdit" style="display:none">Cancelar Edição</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size:0.95rem;margin-bottom:1rem;">Lançamentos do Dia</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Período</th>
+                <th>Processo</th>
+                <th>Funcionário</th>
+                <th class="num">Meta</th>
+                <th class="num">Produção</th>
+                <th class="num">%</th>
+                <th>Situação</th>
+                <th>Obs.</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyLancamentos">
+              <tr><td colspan="9" class="empty-state"><div class="icon">📋</div>Nenhum lançamento registrado</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAINEL: Dashboard -->
+    <section class="panel" id="panel-dashboard">
+      <h2 class="panel-title">Dashboard Executivo</h2>
+      <div class="card-grid card-grid-4 section-gap" id="kpiCards"></div>
+      <div class="card-grid card-grid-2 section-gap">
+        <div class="card" id="rankFuncionarios"></div>
+        <div class="card" id="rankProcessos"></div>
+      </div>
+      <div class="card-grid card-grid-2 section-gap">
+        <div class="card" id="melhorPeriodo"></div>
+        <div class="card" id="abaixoMeta"></div>
+      </div>
+      <div class="card section-gap" id="chartProcessos"></div>
+    </section>
+
+    <!-- PAINEL: Por Período -->
+    <section class="panel" id="panel-periodo">
+      <h2 class="panel-title">Visão por Período</h2>
+      <div class="card-grid card-grid-2" id="periodCards"></div>
+    </section>
+
+    <!-- PAINEL: Por Processo -->
+    <section class="panel" id="panel-processo">
+      <h2 class="panel-title">Visão por Processo</h2>
+      <div class="process-tabs" id="processTabs"></div>
+      <div class="card" id="processContent"></div>
+    </section>
+
+    <!-- PAINEL: Resumo Diário -->
+    <section class="panel" id="panel-resumo">
+      <h2 class="panel-title">Resumo Diário Consolidado</h2>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Funcionário</th>
+                <th class="num">P1 (07-09)</th>
+                <th class="num">P2 (09-12)</th>
+                <th class="num">P3 (13-15)</th>
+                <th class="num">P4 (15-17)</th>
+                <th class="num">Média Diária</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyResumo"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAINEL: Observações -->
+    <section class="panel" id="panel-observacoes">
+      <h2 class="panel-title">Observações do Dia</h2>
+      <div class="card section-gap">
+        <div class="form-group">
+          <label for="obsGeral">Observações Gerais do Dia</label>
+          <textarea id="obsGeral" rows="4" placeholder="Observações gerais sobre o dia de produção..."></textarea>
+        </div>
+      </div>
+      <div class="card-grid card-grid-2 section-gap" id="obsPeriodos"></div>
+      <div class="card">
+        <h3 style="font-size:0.95rem;margin-bottom:1rem;">Observações por Lançamento</h3>
+        <div id="obsLancamentos"></div>
+      </div>
+    </section>
+
+    <!-- PAINEL: Síntese & Alertas -->
+    <section class="panel" id="panel-sintese">
+      <h2 class="panel-title">Síntese Executiva & Alertas</h2>
+      <div class="card section-gap" id="alertasContainer"></div>
+      <div class="card" id="sinteseContainer"></div>
+    </section>
+
+  </main>
+
+  <!-- Modal de confirmação -->
+  <div class="modal-overlay" id="modalConfirm">
+    <div class="modal">
+      <h3 id="modalConfirmTitle">Confirmar</h3>
+      <p id="modalConfirmMsg" style="color:var(--text-muted);font-size:0.9rem;"></p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="modalCancel">Cancelar</button>
+        <button class="btn btn-danger" id="modalOk">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de exclusão -->
+  <div class="modal-overlay" id="modalDelete">
+    <div class="modal">
+      <h3>Excluir Lançamento</h3>
+      <p style="color:var(--text-muted);font-size:0.9rem;">Deseja realmente excluir este lançamento? Esta ação não pode ser desfeita.</p>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="deleteCancel">Cancelar</button>
+        <button class="btn btn-danger" id="deleteOk">Excluir</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    /* ═══════════════════════════════════════════════════════════════
+       JAVASCRIPT — Lógica DCP: dados, cálculos, renderização, persistência
+       ═══════════════════════════════════════════════════════════════ */
+
+    // ─── Constantes ───────────────────────────────────────────────
+    const STORAGE_KEY = 'dcp_gestao_producao_v1';
+
+    const PERIODOS = {
+      1: { label: 'Período 1', horario: '07:00 às 09:00' },
+      2: { label: 'Período 2', horario: '09:00 às 12:00' },
+      3: { label: 'Período 3', horario: '13:00 às 15:00' },
+      4: { label: 'Período 4', horario: '15:00 às 17:00' }
+    };
+
+    const PROCESSOS = ['Enchimento', 'Embalagem', 'Prensa', 'Montagem', 'Costura'];
+
+    const TAGS = {
+      normal: 'Normal',
+      producao_parcial: 'Produção Parcial',
+      maquina_parada: 'Máquina Parada',
+      ausencia: 'Ausência',
+      fechamento: 'Fechamento',
+      problema_operacional: 'Problema Operacional'
+    };
+
+    // ─── Estado ───────────────────────────────────────────────────
+    let appData = loadAllData();
+    let currentDate = todayStr();
+    let selectedTag = 'normal';
+    let deleteTargetId = null;
+    let confirmCallback = null;
+    let activeProcessTab = PROCESSOS[0];
+
+    // ─── Utilitários ──────────────────────────────────────────────
+
+    /** Retorna data atual no formato YYYY-MM-DD */
+    function todayStr() {
+      const d = new Date();
+      return d.toISOString().slice(0, 10);
+    }
+
+    /** Gera ID único para lançamentos */
+    function genId() {
+      return 'e_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    }
+
+    /** Converte valor para número ou null se vazio/inválido */
+    function parseNum(val) {
+      if (val === '' || val === null || val === undefined) return null;
+      const n = Number(val);
+      return isNaN(n) ? null : n;
+    }
+
+    /** Calcula percentual de produtividade — seguro contra divisão por zero */
+    function calcPercentual(meta, producao) {
+      const m = parseNum(meta);
+      const p = parseNum(producao);
+      if (m === null || p === null || m === 0) return null;
+      return (p / m) * 100;
+    }
+
+    /** Formata percentual para exibição */
+    function fmtPercent(val) {
+      if (val === null || val === undefined || isNaN(val)) return '—';
+      return val.toFixed(1) + '%';
+    }
+
+    /** Formata número ou retorna traço */
+    function fmtNum(val) {
+      if (val === null || val === undefined) return '—';
+      return val.toLocaleString('pt-BR');
+    }
+
+    /** Classe CSS de eficiência baseada no percentual */
+    function getEffClass(pct) {
+      if (pct === null || pct === undefined) return 'eff-neutral';
+      if (pct >= 100) return 'eff-green';
+      if (pct >= 80) return 'eff-yellow';
+      return 'eff-red';
+    }
+
+    /** Badge de status diário */
+    function getStatusBadge(pct) {
+      if (pct === null) return '<span class="badge badge-neutral">Sem dados</span>';
+      if (pct >= 100) return '<span class="badge badge-green">Acima da meta</span>';
+      if (pct >= 80) return '<span class="badge badge-yellow">Dentro do esperado</span>';
+      return '<span class="badge badge-red">Abaixo da meta</span>';
+    }
+
+    /** Classe de barra de gráfico */
+    function getBarClass(pct) {
+      if (pct === null) return 'red';
+      if (pct >= 100) return 'green';
+      if (pct >= 80) return 'yellow';
+      return 'red';
+    }
+
+    /** Toast de notificação */
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show ' + type;
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    // ─── Persistência (localStorage) ──────────────────────────────
+
+    function loadAllData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : { days: {} };
+      } catch (e) {
+        console.warn('Erro ao carregar dados:', e);
+        return { days: {} };
+      }
+    }
+
+    function saveAllData() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+      } catch (e) {
+        showToast('Erro ao salvar dados no navegador', 'error');
+      }
+    }
+
+    /** Retorna estrutura do dia, criando se não existir */
+    function getDayData(date) {
+      if (!appData.days[date]) {
+        appData.days[date] = {
+          entries: [],
+          obsGeral: '',
+          obsPeriodos: { '1': '', '2': '', '3': '', '4': '' }
+        };
+      }
+      return appData.days[date];
+    }
+
+    function getEntries(date) {
+      return getDayData(date).entries;
+    }
+
+    // ─── Consolidação e Cálculos ──────────────────────────────────
+
+    /** Soma meta e produção de um conjunto de entries */
+    function sumMetaProducao(entries) {
+      let meta = 0, producao = 0, hasMeta = false, hasProducao = false;
+      entries.forEach(e => {
+        const m = parseNum(e.meta);
+        const p = parseNum(e.producao);
+        if (m !== null) { meta += m; hasMeta = true; }
+        if (p !== null) { producao += p; hasProducao = true; }
+      });
+      return {
+        meta: hasMeta ? meta : null,
+        producao: hasProducao ? producao : null,
+        percentual: calcPercentual(hasMeta ? meta : null, hasProducao ? producao : null)
+      };
+    }
+
+    /** Consolida totais do dia */
+    function consolidateDay(entries) {
+      return sumMetaProducao(entries);
+    }
+
+    /** Consolida por período */
+    function consolidateByPeriod(entries) {
+      const result = {};
+      [1, 2, 3, 4].forEach(p => {
+        const filtered = entries.filter(e => Number(e.periodo) === p);
+        result[p] = { ...sumMetaProducao(filtered), entries: filtered };
+      });
+      return result;
+    }
+
+    /** Consolida por processo */
+    function consolidateByProcess(entries) {
+      const result = {};
+      PROCESSOS.forEach(proc => {
+        const filtered = entries.filter(e => e.processo === proc);
+        result[proc] = { ...sumMetaProducao(filtered), entries: filtered };
+      });
+      return result;
+    }
+
+    /** Consolida por funcionário */
+    function consolidateByEmployee(entries) {
+      const map = {};
+      entries.forEach(e => {
+        const name = e.funcionario.trim();
+        if (!name) return;
+        if (!map[name]) map[name] = [];
+        map[name].push(e);
+      });
+
+      const result = {};
+      Object.keys(map).sort().forEach(name => {
+        const empEntries = map[name];
+        const periodData = {};
+        const periodPcts = [];
+
+        [1, 2, 3, 4].forEach(p => {
+          const filtered = empEntries.filter(e => Number(e.periodo) === p);
+          const stats = sumMetaProducao(filtered);
+          periodData[p] = stats;
+          if (stats.percentual !== null) periodPcts.push(stats.percentual);
+        });
+
+        const mediaDiaria = periodPcts.length > 0
+          ? periodPcts.reduce((a, b) => a + b, 0) / periodPcts.length
+          : null;
+
+        result[name] = { periodData, mediaDiaria, entries: empEntries };
+      });
+      return result;
+    }
+
+    /** Ranking de funcionários por média diária */
+    function rankEmployees(empData) {
+      return Object.entries(empData)
+        .map(([name, data]) => ({ name, pct: data.mediaDiaria }))
+        .filter(r => r.pct !== null)
+        .sort((a, b) => b.pct - a.pct);
+    }
+
+    /** Ranking de processos */
+    function rankProcesses(procData) {
+      return PROCESSOS
+        .map(proc => ({ name: proc, pct: procData[proc].percentual }))
+        .filter(r => r.pct !== null)
+        .sort((a, b) => b.pct - a.pct);
+    }
+
+    /** Melhor período do dia */
+    function getBestPeriod(periodData) {
+      let best = null, bestPct = -1;
+      [1, 2, 3, 4].forEach(p => {
+        const pct = periodData[p].percentual;
+        if (pct !== null && pct > bestPct) {
+          bestPct = pct;
+          best = p;
+        }
+      });
+      return best !== null ? { periodo: best, percentual: bestPct } : null;
+    }
+
+    /** Funcionários abaixo de um limiar */
+    function employeesBelow(entries, threshold = 80) {
+      const emp = consolidateByEmployee(entries);
+      return Object.entries(emp)
+        .filter(([, d]) => d.mediaDiaria !== null && d.mediaDiaria < threshold)
+        .map(([name, d]) => ({ name, pct: d.mediaDiaria }));
+    }
+
+    /** Processos abaixo de um limiar */
+    function processesBelow(entries, threshold = 80) {
+      const proc = consolidateByProcess(entries);
+      return PROCESSOS
+        .filter(p => proc[p].percentual !== null && proc[p].percentual < threshold)
+        .map(p => ({ name: p, pct: proc[p].percentual }));
+    }
+
+    // ─── Alertas e Síntese Executiva ──────────────────────────────
+
+    function generateAlerts(entries) {
+      const alerts = [];
+
+      if (entries.length === 0) {
+        alerts.push({ type: 'info', icon: 'ℹ️', msg: 'Nenhum lançamento registrado para este dia.' });
+        return alerts;
+      }
+
+      // Funcionários abaixo de 80%
+      employeesBelow(entries, 80).forEach(e => {
+        alerts.push({
+          type: 'critical',
+          icon: '🔴',
+          msg: `Funcionário "${e.name}" abaixo de 80% — produtividade: ${fmtPercent(e.pct)}`
+        });
+      });
+
+      // Processos abaixo de 80%
+      processesBelow(entries, 80).forEach(p => {
+        alerts.push({
+          type: 'critical',
+          icon: '🔴',
+          msg: `Processo "${p.name}" abaixo de 80% — produtividade: ${fmtPercent(p.pct)}`
+        });
+      });
+
+      // Produção > 120% da meta
+      entries.forEach(e => {
+        const pct = calcPercentual(e.meta, e.producao);
+        if (pct !== null && pct > 120) {
+          alerts.push({
+            type: 'info',
+            icon: '📈',
+            msg: `${e.funcionario} (${e.processo}, P${e.periodo}): produção ${fmtPercent(pct)} — acima de 120% da meta`
+          });
+        }
+      });
+
+      // Lançamento sem meta
+      entries.forEach(e => {
+        if (parseNum(e.meta) === null) {
+          alerts.push({
+            type: 'warning',
+            icon: '⚠️',
+            msg: `Lançamento sem meta: ${e.funcionario} — ${e.processo} (P${e.periodo})`
+          });
+        }
+      });
+
+      // Lançamento sem produção
+      entries.forEach(e => {
+        if (parseNum(e.producao) === null) {
+          alerts.push({
+            type: 'warning',
+            icon: '⚠️',
+            msg: `Lançamento sem produção: ${e.funcionario} — ${e.processo} (P${e.periodo})`
+          });
+        }
+      });
+
+      // Situações especiais
+      entries.filter(e => e.tag && e.tag !== 'normal').forEach(e => {
+        alerts.push({
+          type: 'warning',
+          icon: '🏷',
+          msg: `${TAGS[e.tag] || e.tag}: ${e.funcionario} — ${e.processo} (P${e.periodo})${e.observacao ? ' — ' + e.observacao : ''}`
+        });
+      });
+
+      if (alerts.filter(a => a.type === 'critical').length === 0 && entries.length > 0) {
+        alerts.unshift({
+          type: 'success',
+          icon: '✅',
+          msg: 'Nenhum alerta crítico identificado. Operação dentro dos parâmetros esperados.'
+        });
+      }
+
+      return alerts;
+    }
+
+    function generateSynthesis(entries, date) {
+      const day = consolidateDay(entries);
+      const emp = consolidateByEmployee(entries);
+      const proc = consolidateByProcess(entries);
+      const period = consolidateByPeriod(entries);
+      const best = getBestPeriod(period);
+      const rankEmp = rankEmployees(emp);
+      const rankProc = rankProcesses(proc);
+      const belowEmp = employeesBelow(entries, 80);
+      const belowProc = processesBelow(entries, 80);
+
+      const pontosFortes = [];
+      const pontosCriticos = [];
+      const recomendacoes = [];
+
+      // Pontos fortes
+      if (day.percentual !== null && day.percentual >= 100) {
+        pontosFortes.push(`Produtividade geral do dia atingiu ${fmtPercent(day.percentual)}, superando a meta consolidada.`);
+      }
+      if (rankEmp.length > 0 && rankEmp[0].pct >= 100) {
+        pontosFortes.push(`Destaque individual: ${rankEmp[0].name} com ${fmtPercent(rankEmp[0].pct)} de produtividade média.`);
+      }
+      if (rankProc.length > 0 && rankProc[0].pct >= 100) {
+        pontosFortes.push(`Melhor processo: ${rankProc[0].name} com ${fmtPercent(rankProc[0].pct)} de eficiência.`);
+      }
+      if (best) {
+        pontosFortes.push(`Melhor período: ${PERIODOS[best.periodo].label} (${PERIODOS[best.periodo].horario}) com ${fmtPercent(best.percentual)}.`);
+      }
+      const acima120 = entries.filter(e => {
+        const p = calcPercentual(e.meta, e.producao);
+        return p !== null && p > 120;
+      });
+      if (acima120.length > 0) {
+        pontosFortes.push(`${acima120.length} lançamento(s) com produção acima de 120% da meta — excelente desempenho operacional.`);
+      }
+
+      // Pontos críticos
+      if (day.percentual !== null && day.percentual < 80) {
+        pontosCriticos.push(`Produtividade geral abaixo de 80% (${fmtPercent(day.percentual)}) — atenção imediata necessária.`);
+      } else if (day.percentual !== null && day.percentual < 100) {
+        pontosCriticos.push(`Produtividade geral em ${fmtPercent(day.percentual)} — abaixo da meta, porém acima do limiar crítico.`);
+      }
+      belowEmp.forEach(e => {
+        pontosCriticos.push(`${e.name} com média diária de ${fmtPercent(e.pct)} — abaixo do esperado.`);
+      });
+      belowProc.forEach(p => {
+        pontosCriticos.push(`Processo ${p.name} com ${fmtPercent(p.pct)} — necessita acompanhamento.`);
+      });
+      const especiais = entries.filter(e => ['maquina_parada', 'ausencia', 'problema_operacional'].includes(e.tag));
+      if (especiais.length > 0) {
+        pontosCriticos.push(`${especiais.length} ocorrência(s) registrada(s): máquina parada, ausência ou problemas operacionais.`);
+      }
+      const semMeta = entries.filter(e => parseNum(e.meta) === null).length;
+      const semProd = entries.filter(e => parseNum(e.producao) === null).length;
+      if (semMeta > 0) pontosCriticos.push(`${semMeta} lançamento(s) sem meta definida — dificulta análise de produtividade.`);
+      if (semProd > 0) pontosCriticos.push(`${semProd} lançamento(s) sem produção registrada.`);
+
+      // Recomendações
+      if (belowEmp.length > 0) {
+        recomendacoes.push(`Realizar feedback individual com: ${belowEmp.map(e => e.name).join(', ')}.`);
+      }
+      if (belowProc.length > 0) {
+        recomendacoes.push(`Investigar gargalos nos processos: ${belowProc.map(p => p.name).join(', ')}.`);
+      }
+      if (especiais.filter(e => e.tag === 'maquina_parada').length > 0) {
+        recomendacoes.push('Verificar manutenção preventiva das máquinas com paradas registradas.');
+      }
+      if (best && best.percentual >= 100) {
+        const worstPeriod = [1, 2, 3, 4]
+          .filter(p => period[p].percentual !== null)
+          .sort((a, b) => period[a].percentual - period[b].percentual)[0];
+        if (worstPeriod && period[worstPeriod].percentual < 80) {
+          recomendacoes.push(`Reforçar equipe no ${PERIODOS[worstPeriod].label} (${PERIODOS[worstPeriod].horario}), período com menor desempenho.`);
+        }
+      }
+      if (semMeta > 0 || semProd > 0) {
+        recomendacoes.push('Garantir preenchimento completo de meta e produção em todos os lançamentos.');
+      }
+      if (recomendacoes.length === 0 && entries.length > 0) {
+        recomendacoes.push('Manter o ritmo atual e documentar boas práticas observadas no turno.');
+      }
+
+      if (entries.length === 0) {
+        return {
+          titulo: `Síntese Executiva — ${formatDateBR(date)}`,
+          intro: 'Nenhum dado lançado para este dia. Registre os lançamentos para gerar a síntese automática.',
+          pontosFortes: [],
+          pontosCriticos: ['Dia sem registros de produção.'],
+          recomendacoes: ['Iniciar lançamentos assim que a produção começar.']
+        };
+      }
+
+      return {
+        titulo: `Síntese Executiva — ${formatDateBR(date)}`,
+        intro: `Consolidado do dia: Meta ${fmtNum(day.meta)} | Produção ${fmtNum(day.producao)} | Eficiência ${fmtPercent(day.percentual)}. Total de ${entries.length} lançamento(s) registrado(s).`,
+        pontosFortes: pontosFortes.length ? pontosFortes : ['Nenhum ponto forte destacado neste dia.'],
+        pontosCriticos: pontosCriticos.length ? pontosCriticos : ['Nenhum ponto crítico identificado.'],
+        recomendacoes: recomendacoes.length ? recomendacoes : ['Continuar monitoramento padrão.']
+      };
+    }
+
+    function formatDateBR(dateStr) {
+      const [y, m, d] = dateStr.split('-');
+      return `${d}/${m}/${y}`;
+    }
+
+    // ─── Exportação / Importação ──────────────────────────────────
+
+    function exportJSON() {
+      const blob = new Blob([JSON.stringify(appData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `dcp_producao_${currentDate}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('JSON exportado com sucesso');
+    }
+
+    function importJSON(file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const data = JSON.parse(ev.target.result);
+          if (!data.days) throw new Error('Formato inválido');
+          appData = data;
+          saveAllData();
+          renderAll();
+          showToast('Dados importados com sucesso');
+        } catch (e) {
+          showToast('Erro ao importar JSON: arquivo inválido', 'error');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function exportCSV() {
+      const entries = getEntries(currentDate);
+      if (entries.length === 0) {
+        showToast('Nenhum dado para exportar', 'error');
+        return;
+      }
+
+      const headers = ['Data', 'Periodo', 'Horario', 'Processo', 'Funcionario', 'Meta', 'Producao', 'Percentual', 'Situacao', 'Observacao'];
+      const rows = entries.map(e => {
+        const pct = calcPercentual(e.meta, e.producao);
+        return [
+          currentDate,
+          e.periodo,
+          PERIODOS[e.periodo]?.horario || '',
+          e.processo,
+          e.funcionario,
+          e.meta ?? '',
+          e.producao ?? '',
+          pct !== null ? pct.toFixed(1) : '',
+          TAGS[e.tag] || e.tag || '',
+          (e.observacao || '').replace(/"/g, '""')
+        ].map(v => `"${v}"`).join(',');
+      });
+
+      const csv = [headers.join(','), ...rows].join('\n');
+      const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `dcp_producao_${currentDate}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('CSV exportado com sucesso');
+    }
+
+    function clearDay() {
+      delete appData.days[currentDate];
+      saveAllData();
+      renderAll();
+      showToast('Dia limpo com sucesso');
+    }
+
+    // ─── CRUD Lançamentos ─────────────────────────────────────────
+
+    function addOrUpdateEntry(data) {
+      const day = getDayData(currentDate);
+      if (data.id) {
+        const idx = day.entries.findIndex(e => e.id === data.id);
+        if (idx >= 0) day.entries[idx] = data;
+      } else {
+        data.id = genId();
+        day.entries.push(data);
+      }
+      saveAllData();
+    }
+
+    function deleteEntry(id) {
+      const day = getDayData(currentDate);
+      day.entries = day.entries.filter(e => e.id !== id);
+      saveAllData();
+    }
+
+    function resetForm() {
+      document.getElementById('formLancamento').reset();
+      document.getElementById('editId').value = '';
+      document.getElementById('btnSubmit').textContent = '➕ Adicionar Lançamento';
+      document.getElementById('btnCancelEdit').style.display = 'none';
+      selectedTag = 'normal';
+      updateTagUI();
+    }
+
+    function editEntry(id) {
+      const entry = getEntries(currentDate).find(e => e.id === id);
+      if (!entry) return;
+
+      document.getElementById('editId').value = entry.id;
+      document.getElementById('inputPeriodo').value = entry.periodo;
+      document.getElementById('inputProcesso').value = entry.processo;
+      document.getElementById('inputFuncionario').value = entry.funcionario;
+      document.getElementById('inputMeta').value = entry.meta ?? '';
+      document.getElementById('inputProducao').value = entry.producao ?? '';
+      document.getElementById('inputObservacao').value = entry.observacao || '';
+      selectedTag = entry.tag || 'normal';
+      updateTagUI();
+      document.getElementById('btnSubmit').textContent = '💾 Salvar Alterações';
+      document.getElementById('btnCancelEdit').style.display = 'inline-flex';
+
+      // Scroll to form
+      document.getElementById('panel-lancamento').scrollIntoView({ behavior: 'smooth' });
+      switchPanel('lancamento');
+    }
+
+    // ─── Renderização ─────────────────────────────────────────────
+
+    function renderLancamentos() {
+      const entries = getEntries(currentDate);
+      const tbody = document.getElementById('tbodyLancamentos');
+
+      if (entries.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="empty-state"><div class="icon">📋</div>Nenhum lançamento registrado</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = entries
+        .sort((a, b) => Number(a.periodo) - Number(b.periodo) || a.processo.localeCompare(b.processo))
+        .map(e => {
+          const pct = calcPercentual(e.meta, e.producao);
+          const effClass = getEffClass(pct);
+          const tagLabel = TAGS[e.tag] || 'Normal';
+          const obsShort = e.observacao ? (e.observacao.length > 30 ? e.observacao.slice(0, 30) + '…' : e.observacao) : '—';
+          return `<tr>
+            <td>P${e.periodo}</td>
+            <td>${esc(e.processo)}</td>
+            <td>${esc(e.funcionario)}</td>
+            <td class="num">${fmtNum(parseNum(e.meta))}</td>
+            <td class="num">${fmtNum(parseNum(e.producao))}</td>
+            <td class="num ${effClass}">${fmtPercent(pct)}</td>
+            <td><span class="badge ${e.tag !== 'normal' ? 'badge-yellow' : 'badge-neutral'}">${esc(tagLabel)}</span></td>
+            <td title="${esc(e.observacao || '')}">${esc(obsShort)}</td>
+            <td>
+              <button class="btn btn-secondary btn-sm btn-icon" onclick="editEntry('${e.id}')" title="Editar">✏️</button>
+              <button class="btn btn-danger btn-sm btn-icon" onclick="confirmDelete('${e.id}')" title="Excluir">🗑</button>
+            </td>
+          </tr>`;
+        }).join('');
+    }
+
+    function renderDashboard() {
+      const entries = getEntries(currentDate);
+      const day = consolidateDay(entries);
+      const emp = consolidateByEmployee(entries);
+      const proc = consolidateByProcess(entries);
+      const period = consolidateByPeriod(entries);
+      const best = getBestPeriod(period);
+      const rankEmp = rankEmployees(emp);
+      const rankProc = rankProcesses(proc);
+      const belowEmp = employeesBelow(entries, 80);
+      const belowProc = processesBelow(entries, 80);
+
+      const effClass = getEffClass(day.percentual);
+
+      document.getElementById('kpiCards').innerHTML = `
+        <div class="kpi-card">
+          <div class="kpi-label">Produção Total</div>
+          <div class="kpi-value">${fmtNum(day.producao)}</div>
+          <div class="kpi-sub">${entries.length} lançamento(s)</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Meta Total</div>
+          <div class="kpi-value">${fmtNum(day.meta)}</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Produtividade Geral</div>
+          <div class="kpi-value ${effClass}">${fmtPercent(day.percentual)}</div>
+          ${getStatusBadge(day.percentual)}
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Funcionários</div>
+          <div class="kpi-value">${Object.keys(emp).length}</div>
+          <div class="kpi-sub">${belowEmp.length} abaixo de 80%</div>
+        </div>`;
+
+      // Ranking funcionários
+      document.getElementById('rankFuncionarios').innerHTML = `
+        <h3 style="font-size:0.95rem;margin-bottom:1rem;">🏆 Ranking de Funcionários</h3>
+        ${rankEmp.length ? `<ul class="ranking-list">${rankEmp.map((r, i) => {
+          const posClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+          return `<li><span style="display:flex;align-items:center"><span class="rank-pos ${posClass}">${i + 1}</span>${esc(r.name)}</span><span class="${getEffClass(r.pct)}">${fmtPercent(r.pct)}</span></li>`;
+        }).join('')}</ul>` : '<div class="empty-state">Sem dados</div>'}`;
+
+      // Ranking processos
+      document.getElementById('rankProcessos').innerHTML = `
+        <h3 style="font-size:0.95rem;margin-bottom:1rem;">📊 Ranking por Processo</h3>
+        ${rankProc.length ? `<ul class="ranking-list">${rankProc.map((r, i) => {
+          const posClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+          return `<li><span style="display:flex;align-items:center"><span class="rank-pos ${posClass}">${i + 1}</span>${esc(r.name)}</span><span class="${getEffClass(r.pct)}">${fmtPercent(r.pct)}</span></li>`;
+        }).join('')}</ul>` : '<div class="empty-state">Sem dados</div>'}`;
+
+      // Melhor período
+      document.getElementById('melhorPeriodo').innerHTML = `
+        <h3 style="font-size:0.95rem;margin-bottom:1rem;">⏰ Melhor Período do Dia</h3>
+        ${best ? `<div style="text-align:center;padding:1rem">
+          <div style="font-size:2rem;font-weight:700" class="${getEffClass(best.percentual)}">${fmtPercent(best.percentual)}</div>
+          <div style="color:var(--text-muted);margin-top:0.5rem">${PERIODOS[best.periodo].label}<br>${PERIODOS[best.periodo].horario}</div>
+        </div>` : '<div class="empty-state">Sem dados</div>'}`;
+
+      // Abaixo da meta
+      document.getElementById('abaixoMeta').innerHTML = `
+        <h3 style="font-size:0.95rem;margin-bottom:1rem;">⚠️ Abaixo da Meta (&lt;80%)</h3>
+        <div style="font-size:0.85rem">
+          <p style="margin-bottom:0.5rem;color:var(--text-muted)"><strong>Funcionários:</strong></p>
+          ${belowEmp.length ? belowEmp.map(e => `<span class="badge badge-red" style="margin:0.2rem">${esc(e.name)} ${fmtPercent(e.pct)}</span>`).join('') : '<span class="badge badge-green">Nenhum</span>'}
+          <p style="margin:0.75rem 0 0.5rem;color:var(--text-muted)"><strong>Processos:</strong></p>
+          ${belowProc.length ? belowProc.map(p => `<span class="badge badge-red" style="margin:0.2rem">${esc(p.name)} ${fmtPercent(p.pct)}</span>`).join('') : '<span class="badge badge-green">Nenhum</span>'}
+        </div>`;
+
+      // Gráfico de barras por processo
+      document.getElementById('chartProcessos').innerHTML = `
+        <h3 style="font-size:0.95rem;margin-bottom:1rem;">Produtividade por Processo</h3>
+        <div class="bar-chart">
+          ${PROCESSOS.map(p => {
+            const pct = proc[p].percentual;
+            const width = pct !== null ? Math.min(pct, 150) : 0;
+            return `<div class="bar-row">
+              <span class="bar-label">${esc(p)}</span>
+              <div class="bar-track"><div class="bar-fill ${getBarClass(pct)}" style="width:${width / 1.5}%"></div></div>
+              <span class="bar-value ${getEffClass(pct)}">${fmtPercent(pct)}</span>
+            </div>`;
+          }).join('')}
+        </div>`;
+    }
+
+    function renderPeriodos() {
+      const entries = getEntries(currentDate);
+      const period = consolidateByPeriod(entries);
+
+      document.getElementById('periodCards').innerHTML = [1, 2, 3, 4].map(p => {
+        const data = period[p];
+        const effClass = getEffClass(data.percentual);
+        const inner = data.entries.length === 0
+          ? '<div class="empty-state" style="padding:1.5rem">Sem lançamentos</div>'
+          : `<div class="table-wrap"><table>
+              <thead><tr><th>Processo</th><th>Funcionário</th><th class="num">Meta</th><th class="num">Prod.</th><th class="num">%</th></tr></thead>
+              <tbody>${data.entries.map(e => {
+                const pct = calcPercentual(e.meta, e.producao);
+                return `<tr>
+                  <td>${esc(e.processo)}</td>
+                  <td>${esc(e.funcionario)}</td>
+                  <td class="num">${fmtNum(parseNum(e.meta))}</td>
+                  <td class="num">${fmtNum(parseNum(e.producao))}</td>
+                  <td class="num ${getEffClass(pct)}">${fmtPercent(pct)}</td>
+                </tr>`;
+              }).join('')}</tbody>
+            </table></div>`;
+
+        return `<div class="period-card">
+          <div class="period-header">
+            <h3>${PERIODOS[p].label}</h3>
+            <span class="time">${PERIODOS[p].horario}</span>
+          </div>
+          <div class="period-body">
+            <div class="period-stats">
+              <div class="period-stat">Meta<strong>${fmtNum(data.meta)}</strong></div>
+              <div class="period-stat">Produção<strong>${fmtNum(data.producao)}</strong></div>
+              <div class="period-stat">Eficiência<strong class="${effClass}">${fmtPercent(data.percentual)}</strong></div>
+            </div>
+            ${inner}
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function renderProcessos() {
+      const tabsEl = document.getElementById('processTabs');
+      tabsEl.innerHTML = PROCESSOS.map(p =>
+        `<button class="process-tab ${p === activeProcessTab ? 'active' : ''}" data-process="${p}">${p}</button>`
+      ).join('');
+
+      tabsEl.querySelectorAll('.process-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          activeProcessTab = btn.dataset.process;
+          renderProcessos();
+        });
+      });
+
+      const entries = getEntries(currentDate);
+      const proc = consolidateByProcess(entries);
+      const data = proc[activeProcessTab];
+      const effClass = getEffClass(data.percentual);
+
+      // Agrupar por funcionário no processo
+      const byEmp = {};
+      data.entries.forEach(e => {
+        const name = e.funcionario.trim();
+        if (!byEmp[name]) byEmp[name] = [];
+        byEmp[name].push(e);
+      });
+
+      const empRows = Object.keys(byEmp).sort().map(name => {
+        const stats = sumMetaProducao(byEmp[name]);
+        return `<tr>
+          <td>${esc(name)}</td>
+          <td class="num">${fmtNum(stats.meta)}</td>
+          <td class="num">${fmtNum(stats.producao)}</td>
+          <td class="num ${getEffClass(stats.percentual)}">${fmtPercent(stats.percentual)}</td>
+        </tr>`;
+      }).join('');
+
+      document.getElementById('processContent').innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem">
+          <h3 style="font-size:1rem">${activeProcessTab}</h3>
+          <div>Média do processo: <strong class="${effClass}">${fmtPercent(data.percentual)}</strong></div>
+        </div>
+        ${data.entries.length === 0
+          ? '<div class="empty-state">Nenhum lançamento neste processo</div>'
+          : `<div class="table-wrap"><table>
+              <thead><tr><th>Funcionário</th><th class="num">Meta</th><th class="num">Produção</th><th class="num">%</th></tr></thead>
+              <tbody>${empRows}</tbody>
+            </table></div>`}`;
+    }
+
+    function renderResumo() {
+      const entries = getEntries(currentDate);
+      const emp = consolidateByEmployee(entries);
+      const tbody = document.getElementById('tbodyResumo');
+
+      const names = Object.keys(emp).sort();
+      if (names.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Nenhum dado para consolidar</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = names.map(name => {
+        const d = emp[name];
+        const cols = [1, 2, 3, 4].map(p => {
+          const pct = d.periodData[p].percentual;
+          return `<td class="num ${getEffClass(pct)}">${fmtPercent(pct)}</td>`;
+        }).join('');
+        return `<tr>
+          <td>${esc(name)}</td>
+          ${cols}
+          <td class="num ${getEffClass(d.mediaDiaria)}"><strong>${fmtPercent(d.mediaDiaria)}</strong></td>
+          <td>${getStatusBadge(d.mediaDiaria)}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function renderObservacoes() {
+      const day = getDayData(currentDate);
+      document.getElementById('obsGeral').value = day.obsGeral || '';
+
+      document.getElementById('obsPeriodos').innerHTML = [1, 2, 3, 4].map(p => `
+        <div class="card">
+          <div class="form-group">
+            <label>${PERIODOS[p].label} (${PERIODOS[p].horario})</label>
+            <textarea data-period="${p}" rows="3" placeholder="Observações do período...">${esc(day.obsPeriodos[String(p)] || '')}</textarea>
+          </div>
+        </div>
+      `).join('');
+
+      const entries = getEntries(currentDate).filter(e => e.observacao || (e.tag && e.tag !== 'normal'));
+      document.getElementById('obsLancamentos').innerHTML = entries.length === 0
+        ? '<div class="empty-state">Nenhuma observação por lançamento</div>'
+        : entries.map(e => `
+          <div class="alert-item ${e.tag !== 'normal' ? 'warning' : 'info'}" style="margin-bottom:0.5rem">
+            <span class="alert-icon">${e.tag !== 'normal' ? '🏷' : '💬'}</span>
+            <div>
+              <strong>${esc(e.funcionario)}</strong> — ${esc(e.processo)} (P${e.periodo})
+              ${e.tag !== 'normal' ? `<span class="badge badge-yellow">${TAGS[e.tag]}</span>` : ''}
+              <p style="margin-top:0.25rem;color:var(--text-muted)">${esc(e.observacao || '—')}</p>
+            </div>
+          </div>`).join('');
+    }
+
+    function renderSintese() {
+      const entries = getEntries(currentDate);
+      const alerts = generateAlerts(entries);
+      const synthesis = generateSynthesis(entries, currentDate);
+
+      document.getElementById('alertasContainer').innerHTML = `
+        <h3 style="font-size:0.95rem;margin-bottom:1rem;">🔔 Alertas Automáticos</h3>
+        <div class="alert-list">
+          ${alerts.map(a => `<div class="alert-item ${a.type}"><span class="alert-icon">${a.icon}</span><span>${esc(a.msg)}</span></div>`).join('')}
+        </div>`;
+
+      document.getElementById('sinteseContainer').innerHTML = `
+        <h3 style="font-size:0.95rem;margin-bottom:1rem;">📋 ${esc(synthesis.titulo)}</h3>
+        <p style="color:var(--text-muted);margin-bottom:1.25rem;font-size:0.9rem">${esc(synthesis.intro)}</p>
+        <div class="synthesis-block">
+          <h4>✅ Pontos Fortes</h4>
+          <ul>${synthesis.pontosFortes.map(p => `<li>${esc(p)}</li>`).join('')}</ul>
+        </div>
+        <div class="synthesis-block">
+          <h4>⚠️ Pontos Críticos</h4>
+          <ul>${synthesis.pontosCriticos.map(p => `<li>${esc(p)}</li>`).join('')}</ul>
+        </div>
+        <div class="synthesis-block">
+          <h4>💡 Recomendações Operacionais</h4>
+          <ul>${synthesis.recomendacoes.map(p => `<li>${esc(p)}</li>`).join('')}</ul>
+        </div>`;
+    }
+
+    /** Escape HTML para prevenir XSS */
+    function esc(str) {
+      if (!str) return '';
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function renderAll() {
+      renderLancamentos();
+      renderDashboard();
+      renderPeriodos();
+      renderProcessos();
+      renderResumo();
+      renderObservacoes();
+      renderSintese();
+    }
+
+    // ─── Navegação ────────────────────────────────────────────────
+
+    function switchPanel(panelId) {
+      document.querySelectorAll('.nav-tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.panel === panelId);
+      });
+      document.querySelectorAll('.panel').forEach(p => {
+        p.classList.toggle('active', p.id === 'panel-' + panelId);
+      });
+    }
+
+    // ─── Modais ───────────────────────────────────────────────────
+
+    function showConfirm(title, msg, callback) {
+      document.getElementById('modalConfirmTitle').textContent = title;
+      document.getElementById('modalConfirmMsg').textContent = msg;
+      confirmCallback = callback;
+      document.getElementById('modalConfirm').classList.add('open');
+    }
+
+    function confirmDelete(id) {
+      deleteTargetId = id;
+      document.getElementById('modalDelete').classList.add('open');
+    }
+
+    // ─── Tags ─────────────────────────────────────────────────────
+
+    function updateTagUI() {
+      document.querySelectorAll('.tag-option').forEach(el => {
+        el.classList.toggle('selected', el.dataset.tag === selectedTag);
+      });
+    }
+
+    // ─── Event Listeners ──────────────────────────────────────────
+
+    function initEvents() {
+      // Data global
+      const dateInput = document.getElementById('globalDate');
+      dateInput.value = currentDate;
+      dateInput.addEventListener('change', (e) => {
+        currentDate = e.target.value;
+        renderAll();
+      });
+
+      // Navegação
+      document.getElementById('navTabs').addEventListener('click', (e) => {
+        if (e.target.classList.contains('nav-tab')) {
+          switchPanel(e.target.dataset.panel);
+        }
+      });
+
+      // Formulário
+      document.getElementById('formLancamento').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const editId = document.getElementById('editId').value;
+        const entry = {
+          id: editId || undefined,
+          periodo: document.getElementById('inputPeriodo').value,
+          processo: document.getElementById('inputProcesso').value,
+          funcionario: document.getElementById('inputFuncionario').value.trim(),
+          meta: document.getElementById('inputMeta').value,
+          producao: document.getElementById('inputProducao').value,
+          observacao: document.getElementById('inputObservacao').value.trim(),
+          tag: selectedTag
+        };
+        addOrUpdateEntry(entry);
+        resetForm();
+        renderAll();
+        showToast(editId ? 'Lançamento atualizado' : 'Lançamento adicionado');
+      });
+
+      document.getElementById('btnCancelEdit').addEventListener('click', resetForm);
+
+      // Tags
+      document.getElementById('tagSelect').addEventListener('click', (e) => {
+        if (e.target.classList.contains('tag-option')) {
+          selectedTag = e.target.dataset.tag;
+          updateTagUI();
+        }
+      });
+
+      // Observações — auto-save
+      document.getElementById('obsGeral').addEventListener('input', (e) => {
+        getDayData(currentDate).obsGeral = e.target.value;
+        saveAllData();
+      });
+
+      document.getElementById('obsPeriodos').addEventListener('input', (e) => {
+        if (e.target.dataset.period) {
+          getDayData(currentDate).obsPeriodos[e.target.dataset.period] = e.target.value;
+          saveAllData();
+        }
+      });
+
+      // Export / Import
+      document.getElementById('btnExportJSON').addEventListener('click', exportJSON);
+      document.getElementById('btnImportJSON').addEventListener('click', () => {
+        document.getElementById('fileImportJSON').click();
+      });
+      document.getElementById('fileImportJSON').addEventListener('change', (e) => {
+        if (e.target.files[0]) {
+          importJSON(e.target.files[0]);
+          e.target.value = '';
+        }
+      });
+      document.getElementById('btnExportCSV').addEventListener('click', exportCSV);
+
+      // Limpar dia
+      document.getElementById('btnClearDay').addEventListener('click', () => {
+        showConfirm(
+          'Limpar Dia',
+          `Deseja realmente apagar TODOS os dados de ${formatDateBR(currentDate)}? Esta ação não pode ser desfeita.`,
+          clearDay
+        );
+      });
+
+      // Modal confirm
+      document.getElementById('modalCancel').addEventListener('click', () => {
+        document.getElementById('modalConfirm').classList.remove('open');
+        confirmCallback = null;
+      });
+      document.getElementById('modalOk').addEventListener('click', () => {
+        document.getElementById('modalConfirm').classList.remove('open');
+        if (confirmCallback) confirmCallback();
+        confirmCallback = null;
+      });
+
+      // Modal delete
+      document.getElementById('deleteCancel').addEventListener('click', () => {
+        document.getElementById('modalDelete').classList.remove('open');
+        deleteTargetId = null;
+      });
+      document.getElementById('deleteOk').addEventListener('click', () => {
+        if (deleteTargetId) {
+          deleteEntry(deleteTargetId);
+          renderAll();
+          showToast('Lançamento excluído');
+        }
+        document.getElementById('modalDelete').classList.remove('open');
+        deleteTargetId = null;
+      });
+    }
+
+    // ─── Inicialização ────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+      initEvents();
+      updateTagUI();
+      renderAll();
+    });
+
+    // Expor funções globais para onclick inline
+    window.editEntry = editEntry;
+    window.confirmDelete = confirmDelete;
+  </script>
+</body>
+</html>
