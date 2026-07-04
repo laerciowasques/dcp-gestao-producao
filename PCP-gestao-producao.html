@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DCP — Gestão Diária de Produção</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2300b4d8'/%3E%3Cstop offset='100%25' stop-color='%230096c7'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='%231a2332'/%3E%3Ccircle cx='32' cy='32' r='22' fill='none' stroke='url(%23g)' stroke-width='1.5' opacity='.6'/%3E%3Cpath fill='url(%23g)' d='M32 14l2.2 6.8h7.1l-5.7 4.2 2.2 6.8L32 27.6l-5.8 4.2 2.2-6.8-5.7-4.2h7.1z'/%3E%3Cpath fill='none' stroke='%2300b4d8' stroke-width='2' stroke-linecap='round' d='M18 44l6-8 5 4 8-12 9 10'/%3E%3C/svg%3E">
   <style>
     /* ═══════════════════════════════════════════════════════════════
        CSS — Design industrial executivo, responsivo, single-file
@@ -37,11 +38,137 @@
       color: var(--text);
       min-height: 100vh;
       line-height: 1.5;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* ─── Plano de fundo industrial animado ─── */
+    .industrial-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0, 180, 216, 0.08) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 50% at 100% 100%, rgba(0, 150, 199, 0.05) 0%, transparent 50%),
+        linear-gradient(180deg, #0a0e14 0%, #0f1419 40%, #0d1218 100%);
+    }
+
+    .bg-grid {
+      position: absolute;
+      inset: -50%;
+      width: 200%;
+      height: 200%;
+      background-image:
+        linear-gradient(rgba(0, 180, 216, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 180, 216, 0.04) 1px, transparent 1px);
+      background-size: 48px 48px;
+      animation: gridDrift 40s linear infinite;
+    }
+
+    @keyframes gridDrift {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(48px, 48px); }
+    }
+
+    .bg-scanline {
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 180, 216, 0.015) 2px,
+        rgba(0, 180, 216, 0.015) 4px
+      );
+      animation: scanPulse 8s ease-in-out infinite;
+    }
+
+    @keyframes scanPulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.8; }
+    }
+
+    .bg-glow-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0, 180, 216, 0.35), transparent);
+      animation: glowSweep 12s linear infinite;
+      opacity: 0.6;
+    }
+
+    @keyframes glowSweep {
+      0% { top: -2px; }
+      100% { top: 100%; }
+    }
+
+    .bg-gear {
+      position: absolute;
+      opacity: 0.06;
+      color: var(--accent);
+    }
+
+    .bg-gear svg { width: 100%; height: 100%; }
+
+    .bg-gear-1 {
+      width: 280px;
+      height: 280px;
+      top: -80px;
+      right: -60px;
+      animation: gearSpin 90s linear infinite;
+    }
+
+    .bg-gear-2 {
+      width: 180px;
+      height: 180px;
+      bottom: 10%;
+      left: -40px;
+      animation: gearSpinReverse 60s linear infinite;
+    }
+
+    .bg-gear-3 {
+      width: 120px;
+      height: 120px;
+      top: 45%;
+      right: 8%;
+      animation: gearSpin 45s linear infinite;
+    }
+
+    @keyframes gearSpin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes gearSpinReverse {
+      from { transform: rotate(360deg); }
+      to { transform: rotate(0deg); }
+    }
+
+    #bgParticles {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .app-shell {
+      position: relative;
+      z-index: 1;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .bg-grid, .bg-scanline, .bg-glow-line, .bg-gear { animation: none; }
+      #bgParticles { display: none; }
     }
 
     /* Header */
     .header {
-      background: linear-gradient(135deg, #1a2332 0%, #0f1419 100%);
+      background: linear-gradient(135deg, rgba(26, 35, 50, 0.94) 0%, rgba(15, 20, 25, 0.92) 100%);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       border-bottom: 1px solid var(--border);
       padding: 1rem 1.5rem;
       position: sticky;
@@ -65,16 +192,58 @@
     }
 
     .logo-icon {
-      width: 42px;
-      height: 42px;
-      background: linear-gradient(135deg, var(--accent), var(--accent-dim));
-      border-radius: 8px;
+      width: 46px;
+      height: 46px;
+      flex-shrink: 0;
+      border-radius: 10px;
+      background: linear-gradient(145deg, #1e2d42 0%, #141c28 100%);
+      border: 1px solid rgba(0, 180, 216, 0.35);
+      box-shadow: 0 0 20px rgba(0, 180, 216, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.06);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: 800;
-      font-size: 0.85rem;
-      color: #fff;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .logo-icon::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(0, 180, 216, 0.12) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .logo-icon svg {
+      width: 36px;
+      height: 36px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .logo-icon .gear-main {
+      transform-origin: 24px 24px;
+      animation: logoGearSpin 12s linear infinite;
+    }
+
+    .logo-icon .gear-sub {
+      transform-origin: 33px 17px;
+      animation: logoGearSpinReverse 8s linear infinite;
+    }
+
+    @keyframes logoGearSpin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes logoGearSpinReverse {
+      from { transform: rotate(360deg); }
+      to { transform: rotate(0deg); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .logo-icon .gear-main,
+      .logo-icon .gear-sub { animation: none; }
     }
 
     .logo h1 {
@@ -233,7 +402,9 @@
 
     /* Cards */
     .card {
-      background: var(--bg-card);
+      background: rgba(26, 35, 50, 0.88);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 1.25rem;
@@ -251,7 +422,9 @@
 
     /* KPI Cards */
     .kpi-card {
-      background: var(--bg-card);
+      background: rgba(26, 35, 50, 0.88);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 1.25rem;
@@ -398,7 +571,9 @@
 
     /* Period cards */
     .period-card {
-      background: var(--bg-card);
+      background: rgba(26, 35, 50, 0.88);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       overflow: hidden;
@@ -719,6 +894,25 @@
 </head>
 <body>
 
+  <!-- Plano de fundo industrial animado -->
+  <div class="industrial-bg" aria-hidden="true">
+    <div class="bg-grid"></div>
+    <div class="bg-scanline"></div>
+    <div class="bg-glow-line"></div>
+    <div class="bg-gear bg-gear-1">
+      <svg viewBox="0 0 100 100" fill="currentColor"><path d="M50 15l3 9h9.5l-7.7 5.6 2.9 9.5L50 33.8l-7.7 5.3 2.9-9.5-7.7-5.6h9.5z"/><circle cx="50" cy="50" r="18" fill="none" stroke="currentColor" stroke-width="4"/><path d="M50 5v8M50 87v8M5 50h8M87 50h8M18 18l5.6 5.6M76.4 76.4l5.6 5.6M18 82l5.6-5.6M76.4 23.6l5.6-5.6" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+    </div>
+    <div class="bg-gear bg-gear-2">
+      <svg viewBox="0 0 100 100" fill="currentColor"><path d="M50 20l2.5 7.5h8l-6.5 4.7 2.5 7.8L50 36l-6.5 4.7 2.5-7.8-6.5-4.7h8z"/><circle cx="50" cy="50" r="14" fill="none" stroke="currentColor" stroke-width="3"/></svg>
+    </div>
+    <div class="bg-gear bg-gear-3">
+      <svg viewBox="0 0 100 100" fill="currentColor"><path d="M50 22l2 6h6.5l-5.2 3.8 2 6.2L50 38l-5.3 3.8 2-6.2-5.2-3.8h6.5z"/><circle cx="50" cy="50" r="12" fill="none" stroke="currentColor" stroke-width="2.5"/></svg>
+    </div>
+    <canvas id="bgParticles"></canvas>
+  </div>
+
+  <div class="app-shell">
+
   <!-- ═══════════════════════════════════════════════════════════════
        HTML — Estrutura da aplicação DCP
        ═══════════════════════════════════════════════════════════════ -->
@@ -726,7 +920,28 @@
   <header class="header">
     <div class="header-top">
       <div class="logo">
-        <div class="logo-icon">DCP</div>
+        <div class="logo-icon">
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="DCP">
+            <defs>
+              <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#00b4d8"/>
+                <stop offset="100%" stop-color="#0096c7"/>
+              </linearGradient>
+            </defs>
+            <circle cx="24" cy="24" r="21" stroke="url(#logoGrad)" stroke-width="1" opacity="0.4"/>
+            <g class="gear-main">
+              <circle cx="24" cy="24" r="9" stroke="url(#logoGrad)" stroke-width="2.5" fill="#141c28"/>
+              <path d="M24 13v4M24 31v4M13 24h4M31 24h4M16.8 16.8l2.8 2.8M28.4 28.4l2.8 2.8M16.8 31.2l2.8-2.8M28.4 19.6l2.8-2.8" stroke="url(#logoGrad)" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="24" cy="24" r="3" fill="url(#logoGrad)"/>
+            </g>
+            <g class="gear-sub">
+              <circle cx="33" cy="17" r="5.5" stroke="url(#logoGrad)" stroke-width="1.8" fill="#141c28"/>
+              <path d="M33 10.5v1.8M33 21.7v1.8M26.5 17h1.8M37.7 17h1.8" stroke="url(#logoGrad)" stroke-width="1.5" stroke-linecap="round"/>
+            </g>
+            <path d="M10 38 L16 32 L21 35 L28 26 L38 34" stroke="url(#logoGrad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>
+            <circle cx="38" cy="34" r="1.5" fill="#00b4d8"/>
+          </svg>
+        </div>
         <div>
           <h1>Gestão Diária de Produção</h1>
           <span>Controle de Produtividade Efetiva — PCP</span>
@@ -945,6 +1160,8 @@
   </div>
 
   <div class="toast" id="toast"></div>
+
+  </div><!-- /.app-shell -->
 
   <script>
     /* ═══════════════════════════════════════════════════════════════
@@ -1969,8 +2186,95 @@
       });
     }
 
+    // ─── Plano de fundo: partículas industriais ───────────────────
+
+    function initIndustrialBackground() {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      const canvas = document.getElementById('bgParticles');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let particles = [];
+      let animId = null;
+      let w = 0, h = 0;
+
+      function resize() {
+        w = canvas.width = window.innerWidth;
+        h = canvas.height = window.innerHeight;
+      }
+
+      function createParticles() {
+        const count = Math.min(40, Math.floor(w * h / 25000));
+        particles = [];
+        for (let i = 0; i < count; i++) {
+          particles.push({
+            x: Math.random() * w,
+            y: Math.random() * h,
+            vx: (Math.random() - 0.5) * 0.3,
+            vy: (Math.random() - 0.5) * 0.3,
+            r: Math.random() * 1.5 + 0.5,
+            alpha: Math.random() * 0.4 + 0.1
+          });
+        }
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, w, h);
+        particles.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          if (p.x < 0) p.x = w;
+          if (p.x > w) p.x = 0;
+          if (p.y < 0) p.y = h;
+          if (p.y > h) p.y = 0;
+
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(0, 180, 216, ${p.alpha})`;
+          ctx.fill();
+        });
+
+        // Linhas de conexão entre partículas próximas
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 120) {
+              ctx.beginPath();
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(particles[j].x, particles[j].y);
+              ctx.strokeStyle = `rgba(0, 180, 216, ${0.06 * (1 - dist / 120)})`;
+              ctx.lineWidth = 0.5;
+              ctx.stroke();
+            }
+          }
+        }
+
+        animId = requestAnimationFrame(draw);
+      }
+
+      resize();
+      createParticles();
+      draw();
+
+      window.addEventListener('resize', () => {
+        resize();
+        createParticles();
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          cancelAnimationFrame(animId);
+        } else {
+          draw();
+        }
+      });
+    }
+
     // ─── Inicialização ────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', () => {
+      initIndustrialBackground();
       initEvents();
       updateTagUI();
       renderAll();
